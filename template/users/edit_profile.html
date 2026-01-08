@@ -61,7 +61,7 @@
               type="text"
               name="mobile_number"
               class="form-control"
-              value="{{ user_profile.mobile_number }}"
+              value="{{ user.tenantprofile.mobile_number|default:user.ownerprofile.mobile_number }}"
               required />
           </div>
 

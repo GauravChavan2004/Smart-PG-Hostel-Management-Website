@@ -1,263 +1,62 @@
-{% include "core/header.html" %} {% load static %}
-<section class="py-5 bg-white">
-  <div class="container text-center">
-    <div class="row mb-5">
-      <div class="col-md-8 mx-auto">
-        <h6
-          class="text-uppercase fw-bold"
-          style="color: #f39c12; letter-spacing: 2px">
-          Why Choose Us
-        </h6>
-        <h2 class="fw-bold" style="color: #2c3e50">Smart Living Experience</h2>
-      </div>
-    </div>
-    <div class="row g-4">
-      <div class="col-md-4">
-        <div class="p-4 rounded-4 h-100 shadow-sm border bg-light">
-          <div class="display-5 mb-3" style="color: #f39c12">
-            <i class="bi bi-wifi"></i>
-          </div>
-          <h4 class="fw-bold">High-Speed WiFi</h4>
-          <p class="text-muted">
-            Uninterrupted internet for your studies and work. Included in all
-            premium packages.
-          </p>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="p-4 rounded-4 h-100 shadow-sm border bg-light">
-          <div class="display-5 mb-3" style="color: #f39c12">
-            <i class="bi bi-shield-check"></i>
-          </div>
-          <h4 class="fw-bold">Smart Security</h4>
-          <p class="text-muted">
-            24/7 CCTV surveillance and Biometric entry systems to keep you safe.
-          </p>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="p-4 rounded-4 h-100 shadow-sm border bg-light">
-          <div class="display-5 mb-3" style="color: #f39c12">
-            <i class="bi bi-cup-hot-fill"></i>
-          </div>
-          <h4 class="fw-bold">Hygienic Food</h4>
-          <p class="text-muted">
-            Healthy, home-style meals provided daily with customizable menu
-            options.
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
+{% include "core/header.html" %} {% load static %} {% if messages %}
+<div class="container mt-2">
+  {% for message in messages %}
+  <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+  {% endfor %}
+</div>
+{% endif %}
 <section class="py-5" style="background-color: #f8f9fa">
   <div class="container">
-    <div class="d-flex justify-content-between align-items-end mb-4">
-      <div>
-        <h2 class="fw-bold" style="color: #2c3e50">Popular Rooms</h2>
-        <p class="text-muted mb-0">Trending PGs and Hostels near you</p>
-      </div>
-      <a href="#" class="btn btn-outline-dark rounded-pill px-4">View All</a>
-    </div>
-
     <div class="row g-4">
+      {% for item in properties %}
       <div class="col-md-6 col-lg-4">
-        <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card h-100 shadow-sm rounded-4 overflow-hidden">
           <div class="position-relative">
+            {% if item.image %}
             <img
-              src="https://images.unsplash.com/photo-1522771753035-4a53c9d181c9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+              src="{{ item.image.url }}"
               class="card-img-top"
-              alt="Room Image"
               style="height: 220px; object-fit: cover" />
-            <span
-              class="position-absolute top-0 start-0 bg-success text-white px-3 py-1 m-3 rounded-pill fw-bold small"
-              >Available</span
-            >
-            <button
-              class="btn btn-light rounded-circle position-absolute top-0 end-0 m-3 shadow-sm p-2">
-              <i class="bi bi-heart-fill text-danger"></i>
-            </button>
+            {% else %}
+            <img src="{% static 'images/default.jpg' %}" class="card-img-top" />
+            {% endif %}
           </div>
-          <div class="card-body">
-            <div class="d-flex justify-content-between mb-2">
-              <small class="text-muted"
-                ><i class="bi bi-geo-alt-fill text-primary"></i>
-                Gandhinagar</small
-              >
-              <small class="text-warning"
-                ><i class="bi bi-star-fill"></i> 4.5</small
-              >
-            </div>
-            <h5 class="card-title fw-bold">Sunflower Student Hostel</h5>
-            <p class="card-text text-muted small">
-              Triple Sharing • AC • Attached Washroom
-            </p>
-            <hr class="my-3" />
-            <div class="d-flex justify-content-between align-items-center">
-              <h5 class="fw-bold mb-0 text-primary">
-                ₹5,500 <span class="text-muted fs-6 fw-normal">/mo</span>
-              </h5>
-              <a
-                href="#"
-                class="btn btn-sm btn-outline-primary rounded-pill px-3"
-                >Details</a
-              >
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <div class="col-md-6 col-lg-4">
-        <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
-          <div class="position-relative">
-            <img
-              src="https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-              class="card-img-top"
-              alt="Room Image"
-              style="height: 220px; object-fit: cover" />
-            <span
-              class="position-absolute top-0 start-0 bg-warning text-dark px-3 py-1 m-3 rounded-pill fw-bold small"
-              >Fast Filling</span
-            >
-            <button
-              class="btn btn-light rounded-circle position-absolute top-0 end-0 m-3 shadow-sm p-2">
-              <i class="bi bi-heart"></i>
-            </button>
-          </div>
           <div class="card-body">
-            <div class="d-flex justify-content-between mb-2">
-              <small class="text-muted"
-                ><i class="bi bi-geo-alt-fill text-primary"></i> City
-                Center</small
-              >
-              <small class="text-warning"
-                ><i class="bi bi-star-fill"></i> 4.8</small
-              >
-            </div>
-            <h5 class="card-title fw-bold">Elite Boys PG</h5>
-            <p class="card-text text-muted small">
-              Double Sharing • Non-AC • WiFi Included
-            </p>
-            <hr class="my-3" />
-            <div class="d-flex justify-content-between align-items-center">
-              <h5 class="fw-bold mb-0 text-primary">
-                ₹4,200 <span class="text-muted fs-6 fw-normal">/mo</span>
-              </h5>
-              <a
-                href="#"
-                class="btn btn-sm btn-outline-primary rounded-pill px-3"
-                >Details</a
-              >
-            </div>
-          </div>
-        </div>
-      </div>
+            <small class="text-muted">
+              <i class="bi bi-geo-alt-fill text-primary"></i>
+              {{ item.city }}, {{item.area}}
+            </small>
 
-      <div class="col-md-6 col-lg-4">
-        <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
-          <div class="position-relative">
-            <img
-              src="https://images.unsplash.com/photo-1631049307264-da0ec9d70304?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-              class="card-img-top"
-              alt="Room Image"
-              style="height: 220px; object-fit: cover" />
-            <span
-              class="position-absolute top-0 start-0 bg-secondary text-white px-3 py-1 m-3 rounded-pill fw-bold small"
-              >Sold Out</span
-            >
-            <button
-              class="btn btn-light rounded-circle position-absolute top-0 end-0 m-3 shadow-sm p-2">
-              <i class="bi bi-heart"></i>
-            </button>
-          </div>
-          <div class="card-body">
-            <div class="d-flex justify-content-between mb-2">
-              <small class="text-muted"
-                ><i class="bi bi-geo-alt-fill text-primary"></i> Tech
-                Park</small
-              >
-              <small class="text-warning"
-                ><i class="bi bi-star-fill"></i> 4.2</small
-              >
-            </div>
-            <h5 class="card-title fw-bold">Green Valley Girls Hostel</h5>
-            <p class="card-text text-muted small">Single Room • AC • 3 Meals</p>
-            <hr class="my-3" />
-            <div class="d-flex justify-content-between align-items-center">
-              <h5 class="fw-bold mb-0 text-primary">
-                ₹8,000 <span class="text-muted fs-6 fw-normal">/mo</span>
-              </h5>
-              <a
-                href="#"
-                class="btn btn-sm btn-outline-primary rounded-pill px-3"
-                >Details</a
-              >
-            </div>
+            <h5 class="fw-bold">{{ item.name }}</h5>
+
+            <ul class="d-flex gap-4" style="margin-left: -30px">
+              <li style="list-style: none">
+                {% if item.wifi %} WiFi {% else %} No WiFi {% endif %}
+              </li>
+              <li>{% if item.food %} Food {% else %} No Food {% endif %}</li>
+            </ul>
+
+            <a
+              href="{{ item.url }}"
+              class="btn btn-outline-primary btn-sm rounded-pill">
+              Details
+            </a>
+
+            {% if item.type == "pg" %}
+            <span class="badge bg-success ms-2">PG</span>
+            {% else %}
+            <span class="badge bg-success ms-2">Hostel</span>
+            {% endif %} {% if item.type == "pg" %}
+            <span class="badge bg-info ms-2">{{item.gender}} PG</span>
+            {% else %}
+            <span class="badge bg-info ms-2">{{item.gender}} Hostel</span>
+            {% endif %}
           </div>
         </div>
       </div>
+      {% endfor %}
     </div>
   </div>
 </section>
-
-<footer class="bg-dark text-white py-5">
-  <div class="container">
-    <div class="row g-4">
-      <div class="col-md-4">
-        <h5 class="text-warning mb-3">RoomMate</h5>
-        <p class="text-secondary small">
-          Making student and professional accommodation simple, smart, and
-          secure.
-        </p>
-      </div>
-      <div class="col-md-2">
-        <h6 class="fw-bold mb-3">Quick Links</h6>
-        <ul class="list-unstyled text-secondary small">
-          <li class="mb-2">
-            <a href="#" class="text-decoration-none text-secondary">Home</a>
-          </li>
-          <li class="mb-2">
-            <a href="#" class="text-decoration-none text-secondary"
-              >Search Rooms</a
-            >
-          </li>
-          <li class="mb-2">
-            <a href="#" class="text-decoration-none text-secondary">About Us</a>
-          </li>
-        </ul>
-      </div>
-      <div class="col-md-2">
-        <h6 class="fw-bold mb-3">Support</h6>
-        <ul class="list-unstyled text-secondary small">
-          <li class="mb-2">
-            <a href="#" class="text-decoration-none text-secondary"
-              >Help Center</a
-            >
-          </li>
-          <li class="mb-2">
-            <a href="#" class="text-decoration-none text-secondary"
-              >Terms of Service</a
-            >
-          </li>
-          <li class="mb-2">
-            <a href="#" class="text-decoration-none text-secondary"
-              >Privacy Policy</a
-            >
-          </li>
-        </ul>
-      </div>
-      <div class="col-md-4">
-        <h6 class="fw-bold mb-3">Newsletter</h6>
-        <div class="input-group mb-3">
-          <input type="text" class="form-control" placeholder="Email address" />
-          <button class="btn btn-warning" type="button">Subscribe</button>
-        </div>
-      </div>
-    </div>
-    <hr class="border-secondary my-4" />
-    <div class="text-center text-secondary small">
-      &copy; 2024 RoomMate. All rights reserved.
-    </div>
-  </div>
-</footer>
+{% include "core/footer.html" %}

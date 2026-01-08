@@ -1,22 +1,32 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 
-class UserProfile(models.Model):
+
+class TenantProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     mobile_number = models.CharField(max_length=10, unique=True, null=True, blank=True)
 
     def __str__(self):
-        return self.user.username
+        return f"{self.user.username} (Tenant)"
 
 
-@receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
-    if created and not hasattr(instance, 'userprofile'):
-        UserProfile.objects.create(user=instance, mobile_number="")  # Set default empty mobile_number
+class OwnerProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    mobile_number = models.CharField(max_length=10, unique=True, null=True, blank=True)
 
-@receiver(post_save, sender=User)
-def save_user_profile(sender, instance, **kwargs):
-    if hasattr(instance, 'userprofile'):
-        instance.userprofile.save()
+    identity_proof = models.FileField(upload_to='media/kyc/', null=True, blank=True)
+    ownership_proof = models.FileField(upload_to='media/kyc/', null=True, blank=True)
+
+    kyc_status = models.CharField(
+        max_length=10,
+        choices=(
+            ('Pending','Pending'),
+            ('Approved','Approved'),
+            ('Rejected','Rejected')
+        ),
+        default='Pending'
+    )
+    kyc_notes = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.user.username} (Owner)"

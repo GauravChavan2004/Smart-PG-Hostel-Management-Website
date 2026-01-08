@@ -1,3 +1,4 @@
+import re
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User, auth
 from django.contrib import messages
@@ -10,14 +11,127 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.conf import settings
 from .forms import PasswordResetRequestForm, SetNewPasswordForm
-from .models import UserProfile
 from datetime import datetime, timedelta
 from django.utils.timezone import now
+from .models import TenantProfile, OwnerProfile
+from owner.models import Booking
+ALLOWED_FILE_TYPES = ["application/pdf", "image/jpeg", "image/png"]
+MAX_FILE_SIZE = 3 * 1024 * 1024  # 3MB
+USERNAME_REGEX = r'^[A-Za-z][A-Za-z0-9_.]{3,19}$'
 
+def validate_uploaded_file(file):
+    if not file:
+        return False
+
+    if file.content_type not in ALLOWED_FILE_TYPES:
+        return False
+
+    if file.size > MAX_FILE_SIZE:
+        return False
+
+    return True
+
+def owner_register(request):
+    if request.method == 'POST':
+
+        role = "Owner" 
+
+        first_name = request.POST['first_name']
+        last_name = request.POST['last_name']
+        email = request.POST['email']
+        username = request.POST['username']
+        password1 = request.POST['password1']
+        password2 = request.POST['password2']
+        mobile_number = request.POST['mobile_number']
+
+        identity_proof = request.FILES.get('identity_proof')
+        ownership_proof = request.FILES.get('ownership_proof')
+        declaration = request.POST.get('declaration')
+
+        if not declaration:
+            messages.error(request, "You must accept the declaration")
+            return redirect('user:owner_register')
+
+        if password1 != password2:
+            messages.error(request, 'Passwords do not match')
+            return redirect('user:owner_register')
+
+        if len(first_name) < 2:
+            messages.error(request, 'First name must be at least 2 characters long')
+            return redirect('user:owner_register')
+
+        if len(username) < 2:
+            messages.error(request, 'Username must be at least 2 characters long')
+            return redirect('user:owner_register')
+
+        if len(last_name) < 2:
+            messages.error(request, 'Last name must be at least 2 characters long')
+            return redirect('user:owner_register')
+
+        if not email.endswith('@gmail.com'):
+            messages.error(request, 'Only Gmail accounts are allowed')
+            return redirect('user:owner_register')
+
+        if len(mobile_number) != 10 or not mobile_number.isdigit():
+            messages.error(request, 'Mobile number must be exactly 10 digits')
+            return redirect('user:owner_register')
+
+        if User.objects.filter(username=username).exists():
+            messages.error(request, 'Username already taken')
+            return redirect('user:owner_register')
+
+        if User.objects.filter(email=email).exists():
+            messages.error(request, 'Email already registered')
+            return redirect('user:owner_register')
+
+        if OwnerProfile.objects.filter(mobile_number=mobile_number).exists():
+            messages.error(request, 'Mobile number already registered')
+            return redirect('user:owner_register')
+        
+        BLOCKED_USERNAMES = ['admin', 'administrator', 'root', 'support']
+
+        if username.lower() in BLOCKED_USERNAMES:
+            messages.error(request, "This username is not allowed")
+            return redirect('user:owner_register')
+        # Username validation
+
+        if not re.match(USERNAME_REGEX, username):
+            messages.error(request, "Username must start with a letter and can contain letters, numbers, _ or . (4–20 characters)")
+            return redirect('user:owner_register')
+
+        if not validate_uploaded_file(identity_proof):
+            messages.error(request, "Invalid identity document. Only PDF/JPG/PNG max 3MB.")
+            return redirect('user:owner_register')
+
+        if not validate_uploaded_file(ownership_proof):
+            messages.error(request, "Invalid ownership document. Only PDF/JPG/PNG max 3MB.")
+            return redirect('user:owner_register')
+
+        user = User.objects.create_user(
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            username=username,
+            password=password1
+        )
+
+        OwnerProfile.objects.create(
+            user=user,
+            mobile_number=mobile_number,
+            identity_proof=identity_proof,
+            ownership_proof=ownership_proof,
+            kyc_status="Pending"
+        )
+
+        messages.success(request, 'Owner account created. Awaiting verification.')
+        return redirect('user:user_login')
+    
+    return render(request, 'users/owner_register.html')
 
 #@login_required
 def user_register(request):
     if request.method=='POST':
+        role = "Tenant"
         first_name=request.POST['first_name']
         last_name=request.POST['last_name']
         email=request.POST['email']
@@ -25,11 +139,23 @@ def user_register(request):
         password1=request.POST['password1']
         password2=request.POST['password2']     
         mobile_number = request.POST['mobile_number']
+        
+        # Username validation
+        if not re.match(USERNAME_REGEX, username):
+            messages.error(request, "Username must start with a letter and can contain letters, numbers, _ or . (4–20 characters)")
+            return redirect('user:user_register')
+        
+        BLOCKED_USERNAMES = ['admin', 'administrator', 'root', 'support']
+
+        if username.lower() in BLOCKED_USERNAMES:
+            messages.error(request, "This username is not allowed")
+            return redirect('user:user_register')
+
 
         # Check if passwords match
         if password1 != password2:
             messages.error(request, 'Passwords do not match')
-            return redirect('users/user_register')
+            return redirect('users:user_register')
         
         # Check if username or email already exists
         if User.objects.filter(username=username).exists():
@@ -39,7 +165,7 @@ def user_register(request):
             messages.error(request, 'Email is already registered')
             return redirect('user:user_register')
         
-        if UserProfile.objects.filter(mobile_number=mobile_number).exists():
+        if TenantProfile.objects.filter(mobile_number=mobile_number).exists():
             messages.error(request, 'Mobile number is already registered')
             return redirect('user:user_register')
 
@@ -50,31 +176,53 @@ def user_register(request):
             username=username,
             password=password1
         )
-        user.save()
-        user.userprofile.mobile_number = mobile_number
-        user.userprofile.save()
+        TenantProfile.objects.create(
+            user=user,
+            mobile_number=mobile_number
+        )
+
         messages.success(request, 'Account created successfully. You can now log in.')
         return redirect('user:user_login')
     return render(request, 'users/register.html')
 
-def user_regis(request):
-    return render(request, 'users/register121.html')
-
 def user_login(request):
-    if request.method=='POST':
-        username=request.POST['username']
-        password=request.POST['password']
-        user= auth.authenticate(username=username,password=password)
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
 
-        if user is not None:
-            auth.login(request,user)
-            next_url = request.GET.get('next', '/')
-            return redirect(next_url)
-        else:
-            messages.error(request, 'Invalid username and password !!')
+        user = auth.authenticate(username=username, password=password)
+
+        if user is None:
+            messages.error(request, 'Invalid username or password')
             return redirect('user:user_login')
-        
+
+        # ---------- OWNER LOGIN CHECK ----------
+        if hasattr(user, 'ownerprofile'):
+
+            owner = user.ownerprofile
+
+            if owner.kyc_status == "Pending":
+                messages.error(request, "Your KYC is still under review.")
+                return redirect('user:user_login')
+
+            if owner.kyc_status == "Rejected":
+                messages.error(request, "Your KYC was rejected. Please contact admin.")
+                return redirect('user:user_login')
+
+            # allow login only if Approved
+            auth.login(request, user)
+            return redirect('owner:owner_dashboard')
+
+        elif hasattr(user, 'tenantprofile'):
+            auth.login(request, user)
+            return redirect('/')
+
+        else:
+            messages.error(request, 'No role assigned')
+            return redirect('user:user_login')
+
     return render(request, 'users/login.html')
+
 
 def user_logout(request):
     logout(request)
@@ -184,31 +332,62 @@ def password_reset_complete(request):
 
 @login_required
 def user_account(request):
-    return render(request, "users/user_account_details.html")
+    user = request.user
+
+    tenant = getattr(user, 'tenantprofile', None)
+    owner = getattr(user, 'ownerprofile', None)
+
+    my_bookings = Booking.objects.none()
+
+    # ONLY tenants should see bookings
+    if tenant:
+        my_bookings = Booking.objects.filter(user=user).order_by('-booking_date')
+
+    return render(request, "users/user_account_details.html", {
+        "user": user,
+        "tenant": tenant,
+        "owner": owner,
+        "my_bookings": my_bookings,
+    })
+
 
 @login_required
 def edit_profile(request):
+
     user = request.user
+
+    tenant = None
+    owner = None
+
     try:
-        user_profile = user.userprofile
-    except UserProfile.DoesNotExist:
-        user_profile = UserProfile.objects.create(user=user)
+        tenant = user.tenantprofile
+    except:
+        pass
+
+    try:
+        owner = user.ownerprofile
+    except:
+        pass
 
     if request.method == 'POST':
-        first_name = request.POST.get('first_name')
-        last_name = request.POST.get('last_name')
-        email = request.POST.get('email')
-        mobile_number = request.POST.get('mobile_number')
-
-        user.first_name = first_name
-        user.last_name = last_name
-        user.email = email
-        user_profile.mobile_number = mobile_number
-
+        user.first_name = request.POST.get('first_name')
+        user.last_name = request.POST.get('last_name')
+        user.email = request.POST.get('email')
         user.save()
-        user_profile.save()
 
-        messages.success(request, 'Your profile has been updated successfully!')
+        if tenant:
+            tenant.mobile_number = request.POST.get('mobile_number')
+            tenant.save()
+
+        if owner:
+            owner.mobile_number = request.POST.get('mobile_number')
+            owner.save()
+
+        messages.success(request, 'Profile updated successfully!')
         return redirect('user:edit_profile')
 
-    return render(request, 'users/edit_profile.html', {'user': user, 'user_profile': user_profile})
+    return render(request, 'users/edit_profile.html', {
+        'user': user,
+        'tenant': tenant,
+        'owner': owner
+    })

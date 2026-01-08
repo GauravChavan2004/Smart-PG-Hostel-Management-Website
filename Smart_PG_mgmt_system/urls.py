@@ -23,6 +23,7 @@ from core import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('user/',include('users.users_url' , namespace='user')),
+    path('owner/',include('owner.owner_urls' , namespace='owner')),
     path('',include('core.core_urls', namespace="core")),
 
 ]
