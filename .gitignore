@@ -8,6 +8,8 @@ __pycache__/
 db.sqlite3
 media/
 staticfiles/
+kyc/
+pg_images/
 
 # Environment
 .env
